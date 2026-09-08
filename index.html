@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
     
-    <!-- Using a completely alternative CDN network path to bypass local blocks -->
-    <script src="https://cloudflare.com"></script>
+    <!-- Loading the base layout script file via unpkg CDN -->
+    <script src="https://unpkg.com"></script>
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -52,9 +52,11 @@
     </div>
 
     <script>
-        // Stable integration targeting version 2.16 compatibility scope
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
+        // Use standard reference check for older vs newer engine types
+        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        
+        // FIX: Points directly to your local file script in your repository folder
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js';
         
         let activeLawText = "";
         const WORKER_URL = "https://workers.dev";
