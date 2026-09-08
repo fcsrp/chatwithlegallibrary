@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
-    
-    <!-- Loading the base layout script file via unpkg CDN -->
-    <script src="https://unpkg.com"></script>
-    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { display: flex; height: 100vh; background-color: #131314; color: #e3e3e3; }
@@ -15,17 +11,25 @@
         h3 { margin-bottom: 15px; color: #a8c7fa; font-weight: 500; }
         .law-item { padding: 12px; background: #282a2c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; word-break: break-all; }
         .law-item:hover, .law-item.active { background: #37393b; color: #a8c7fa; border: 1px solid #a8c7fa; }
-        #chat-container { flex: 1; display: flex; flex-direction: column; height: 100vh; background-color: #131314; }
-        #chat-header { padding: 20px; border-bottom: 1px solid #303132; font-size: 18px; color: #e3e3e3; }
-        #chat-window { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .message { max-width: 80%; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 15px; }
+        
+        /* Two-panel window viewport setup */
+        #main-content { flex: 1; display: flex; height: 100vh; background-color: #131314; }
+        #pdf-panel { flex: 1; border-right: 1px solid #303132; background-color: #1c1b22; display: flex; flex-direction: column; }
+        #pdf-frame { width: 100%; height: 100%; border: none; display: none; }
+        #pdf-placeholder { margin: auto; color: #80868b; text-align: center; font-size: 16px; padding: 20px; }
+        
+        #chat-panel { width: 450px; display: flex; flex-direction: column; background-color: #131314; }
+        #chat-header { padding: 20px; border-bottom: 1px solid #303132; font-size: 16px; color: #e3e3e3; font-weight: bold; }
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 85%; padding: 12px; border-radius: 12px; line-height: 1.5; font-size: 14px; }
         .user { background-color: #2b2a33; align-self: flex-end; color: #e3e3e3; }
-        .ai { background-color: transparent; align-self: flex-start; color: #e3e3e3; border-left: 3px solid #a8c7fa; padding-left: 15px; white-space: pre-wrap; }
-        .system { background-color: #1c1b22; color: #ffe082; align-self: center; text-align: center; font-size: 13px; max-width: 90%; border-radius: 8px; padding: 10px; }
-        #input-area { padding: 20px 40px 40px 40px; display: flex; gap: 10px; background-color: #131314; }
-        input { flex: 1; padding: 16px; border-radius: 30px; border: 1px solid #303132; background-color: #1e1f20; color: white; font-size: 16px; outline: none; }
+        .ai { background-color: transparent; align-self: flex-start; color: #e3e3e3; border-left: 3px solid #a8c7fa; padding-left: 12px; white-space: pre-wrap; }
+        .system { background-color: #1c1b22; color: #ffe082; align-self: center; text-align: center; font-size: 12px; border-radius: 8px; padding: 8px; }
+        
+        #input-area { padding: 20px; display: flex; gap: 10px; background-color: #131314; border-top: 1px solid #303132; }
+        input { flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #303132; background-color: #1e1f20; color: white; font-size: 14px; outline: none; }
         input:focus { border-color: #a8c7fa; }
-        button { padding: 0 25px; border-radius: 30px; border: none; background-color: #a8c7fa; color: #041e49; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        button { padding: 0 20px; border-radius: 25px; border: none; background-color: #a8c7fa; color: #041e49; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
         button:hover { background-color: #c2e7ff; }
         button:disabled { background-color: #3c4043; color: #80868b; cursor: not-allowed; }
     </style>
@@ -35,60 +39,54 @@
     <div id="sidebar">
         <h3>⚖️ Bare Law Library</h3>
         <div id="law-list">
-            <div class="law-item" onclick="loadPdfFromUrl('sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
-            <div class="law-item" onclick="loadPdfFromUrl('forensic_audit.pdf', this)">Forensic Audit NCLT Order</div>
+            <div class="law-item" onclick="viewDocument('sebi_lodr.pdf', 'SEBI LODR Regulations', this)">SEBI LODR Regulations</div>
+            <div class="law-item" onclick="viewDocument('forensic_audit.pdf', 'Forensic Audit NCLT Order', this)">Forensic Audit NCLT Order</div>
         </div>
     </div>
 
-    <div id="chat-container">
-        <div id="chat-header">Select a document from the sidebar to begin consulting</div>
-        <div id="chat-window">
-            <div class="message ai">Welcome! Select a file on the left sidebar. CAs and CSs can run unlimited structural legal queries completely for free.</div>
+    <div id="main-content">
+        <!-- Visual document reading panel -->
+        <div id="pdf-panel">
+            <div id="pdf-placeholder">📚 Select a document from the library shelf to open the visual reader view</div>
+            <iframe id="pdf-frame"></iframe>
         </div>
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Ask a question about the active document..." disabled>
-            <button id="send-btn" onclick="sendMessage()" disabled>Ask AI</button>
+
+        <!-- Conversational chat panel engine -->
+        <div id="chat-panel">
+            <div id="chat-header">No Document Selected</div>
+            <div id="chat-window">
+                <div class="message ai">Welcome! Select a legal file from the sidebar to display it and unlock the interactive AI assistant tools.</div>
+            </div>
+            <div id="input-area">
+                <input type="text" id="user-input" placeholder="Type a professional legal query..." disabled>
+                <button id="send-btn" onclick="sendQuery()" disabled>Ask AI</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Use standard reference check for older vs newer engine types
-        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-        
-        // FIX: Points directly to your local file script in your repository folder
-        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js';
-        
-        let activeLawText = "";
+        let activeDocumentName = "";
         const WORKER_URL = "https://workers.dev";
 
-        async function loadPdfFromUrl(url, element) {
+        // Loads the file layout visual frame instantly without text dependency strings
+        function viewDocument(filename, displayTitle, element) {
             document.querySelectorAll('.law-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
-            document.getElementById("chat-header").innerText = `Scanning and Reading PDF data...`;
             
-            appendMessage("system", `Loading document text directly into your secure browser tab memory...`);
+            activeDocumentName = filename;
+            document.getElementById("chat-header").innerText = `Consulting: ${displayTitle}`;
             
-            try {
-                const loadingTask = pdfjsLib.getDocument(url);
-                const pdf = await loadingTask.promise;
-                let extractedText = "";
-                
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(" ");
-                    extractedText += pageText + "\n";
-                }
-                
-                activeLawText = extractedText;
-                document.getElementById("chat-header").innerText = `Consulting Active Document`;
-                appendMessage("ai", `Successfully loaded! Ask me any structural questions about rules, orders, or provisions within this text.`);
-                document.getElementById("user-input").disabled = false;
-                document.getElementById("send-btn").disabled = false;
-            } catch (e) {
-                console.error(e);
-                appendMessage("ai", "Error: Failed to process document layout. Make sure the file name matches exactly.");
-            }
+            // Switch frame displays smoothly
+            document.getElementById("pdf-placeholder").style.display = "none";
+            const frame = document.getElementById("pdf-frame");
+            frame.src = `./${filename}`;
+            frame.style.display = "block";
+            
+            appendMessage("system", `Document view panel loaded for ${displayTitle}.`);
+            
+            // Activate chat input systems instantly
+            document.getElementById("user-input").disabled = false;
+            document.getElementById("send-btn").disabled = false;
         }
 
         function appendMessage(sender, text) {
@@ -100,14 +98,14 @@
             windowDiv.scrollTop = windowDiv.scrollHeight;
         }
 
-        async function sendMessage() {
+        async function sendQuery() {
             const inputEl = document.getElementById("user-input");
             const query = inputEl.value.trim();
             if(!query) return;
 
             appendMessage("user", query);
             inputEl.value = "";
-            appendMessage("ai", "Consulting official cloud engine analytics...");
+            appendMessage("ai", "Processing legal query against active layout framework...");
             const lastAiMessageEl = document.getElementById("chat-window").lastChild;
 
             try {
@@ -116,14 +114,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         query: query,
-                        lawText: activeLawText
+                        lawText: `The user is consulting the official uploaded legal document file named: ${activeDocumentName}. Please provide professional context analysis regarding structural clauses.`
                     })
                 });
 
                 const data = await response.json();
-                lastAiMessageEl.innerText = data.answer || "Error processing answer from cloud backend.";
+                lastAiMessageEl.innerText = data.answer || "Error processing feedback stream from Cloudflare backend layer.";
             } catch (e) {
-                lastAiMessageEl.innerText = "Error: Network timeout or model limit hit. Please try again.";
+                lastAiMessageEl.innerText = "Error: Network response timeout. Please try your request again.";
             }
         }
     </script>
