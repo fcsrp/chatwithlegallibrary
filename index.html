@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
-    <!-- Load the official free PDF Reader engine directly in the browser -->
-    <script src="https://cloudflare.com"></script>
+    
+    <!-- FIX: Load the rock-solid official Mozilla PDF reader engine packages -->
+    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com"></script>
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { display: flex; height: 100vh; background-color: #131314; color: #e3e3e3; }
@@ -33,16 +36,16 @@
     <div id="sidebar">
         <h3>⚖️ Bare Law Library</h3>
         <div id="law-list">
-            <!-- Adjusted exactly to read the specific PDF names directly from your root directory folder -->
-            <div class="law-item" onclick="loadPdfFromUrl('sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
-            <div class="law-item" onclick="loadPdfFromUrl('forensic_audit.pdf', this)">Forensic Audit NCLT Order</div>
+            <!-- Points directly to your root level filenames -->
+            <div class="law-item" onclick="loadPdfFromUrl('./sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
+            <div class="law-item" onclick="loadPdfFromUrl('./forensic_audit.pdf', this)">Forensic Audit NCLT Order</div>
         </div>
     </div>
 
     <div id="chat-container">
         <div id="chat-header">Select a document from the sidebar to begin consulting</div>
         <div id="chat-window">
-            <div class="message ai">Welcome! Select a file on the left sidebar. CAs and CSs and Lawyers can run unlimited structural legal queries completely for free.</div>
+            <div class="message ai">Welcome! Select a file on the left sidebar. CAs and CSs can run unlimited structural legal queries completely for free.</div>
         </div>
         <div id="input-area">
             <input type="text" id="user-input" placeholder="Ask a question about the active document..." disabled>
@@ -51,11 +54,12 @@
     </div>
 
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
+        // FIX: Configure the worker path matching the new unpkg source framework
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com';
         
         let activeLawText = "";
         
-        // This links back to your free backend serverless engine from Step 1
+        // Links back to your serverless engine on Cloudflare
         const WORKER_URL = "https://workers.dev";
 
         async function loadPdfFromUrl(url, element) {
@@ -70,7 +74,7 @@
                 const pdf = await loadingTask.promise;
                 let extractedText = "";
                 
-                // Read every page layout inside the user's browser tab
+                // Process the page maps locally inside the active browser window view
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
