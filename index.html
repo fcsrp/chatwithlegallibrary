@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
     
-    <!-- FIX: Load the rock-solid official Mozilla PDF reader engine packages -->
-    <script src="https://unpkg.com"></script>
-    <script src="https://unpkg.com"></script>
-    
+    <!-- Load the PDF Engine using the ultra-stable jsDelivr CDN Network -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { display: flex; height: 100vh; background-color: #131314; color: #e3e3e3; }
@@ -30,15 +31,12 @@
         button:hover { background-color: #c2e7ff; }
         button:disabled { background-color: #3c4043; color: #80868b; cursor: not-allowed; }
     </style>
-</head>
-<body>
 
     <div id="sidebar">
         <h3>⚖️ Bare Law Library</h3>
         <div id="law-list">
-            <!-- Points directly to your root level filenames -->
-            <div class="law-item" onclick="loadPdfFromUrl('./sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
-            <div class="law-item" onclick="loadPdfFromUrl('./forensic_audit.pdf', this)">Forensic Audit NCLT Order</div>
+            <div class="law-item" onclick="loadPdfFromUrl('sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
+            <div class="law-item" onclick="loadPdfFromUrl('forensic_audit.pdf', this)">Forensic Audit NCLT Order</div>
         </div>
     </div>
 
@@ -54,12 +52,13 @@
     </div>
 
     <script>
-        // FIX: Configure the worker path matching the new unpkg source framework
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com';
+        // Setup secure absolute internal worker routing
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://jsdelivr.net';
         
         let activeLawText = "";
         
-        // Links back to your serverless engine on Cloudflare
+        // This links back to your serverless backend engine on Cloudflare
         const WORKER_URL = "https://workers.dev";
 
         async function loadPdfFromUrl(url, element) {
@@ -74,7 +73,7 @@
                 const pdf = await loadingTask.promise;
                 let extractedText = "";
                 
-                // Process the page maps locally inside the active browser window view
+                // Read every single page layout inside the user's browser tab memory
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
