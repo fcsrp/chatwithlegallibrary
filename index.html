@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
     
-    <!-- Load the PDF Engine using the ultra-stable jsDelivr CDN Network -->
+    <!-- Load the official PDF Engine package files -->
     <script src="https://jsdelivr.net"></script>
-</head>
-<body>
-
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { display: flex; height: 100vh; background-color: #131314; color: #e3e3e3; }
@@ -31,6 +29,8 @@
         button:hover { background-color: #c2e7ff; }
         button:disabled { background-color: #3c4043; color: #80868b; cursor: not-allowed; }
     </style>
+</head>
+<body>
 
     <div id="sidebar">
         <h3>⚖️ Bare Law Library</h3>
@@ -52,13 +52,13 @@
     </div>
 
     <script>
-        // Setup secure absolute internal worker routing
+        // CRITICAL FIX: Extract the library using the official, isolated namespace
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://jsdelivr.net';
         
         let activeLawText = "";
         
-        // This links back to your serverless backend engine on Cloudflare
+        // Links back to your serverless backend engine on Cloudflare
         const WORKER_URL = "https://workers.dev";
 
         async function loadPdfFromUrl(url, element) {
