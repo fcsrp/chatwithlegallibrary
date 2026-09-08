@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bare Law Chat Library</title>
     
-    <!-- Load the official PDF Engine package files -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Using a completely alternative CDN network path to bypass local blocks -->
+    <script src="https://cloudflare.com"></script>
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -52,13 +52,11 @@
     </div>
 
     <script>
-        // CRITICAL FIX: Extract the library using the official, isolated namespace
+        // Stable integration targeting version 2.16 compatibility scope
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://jsdelivr.net';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
         
         let activeLawText = "";
-        
-        // Links back to your serverless backend engine on Cloudflare
         const WORKER_URL = "https://workers.dev";
 
         async function loadPdfFromUrl(url, element) {
@@ -73,7 +71,6 @@
                 const pdf = await loadingTask.promise;
                 let extractedText = "";
                 
-                // Read every single page layout inside the user's browser tab memory
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
