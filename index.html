@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bare Law Chat Library</title>
+    <!-- Load the official free PDF Reader engine directly in the browser -->
+    <script src="https://cloudflare.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #131314; color: #e3e3e3; }
+        #sidebar { width: 320px; background-color: #1e1f20; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #303132; }
+        h3 { margin-bottom: 15px; color: #a8c7fa; font-weight: 500; }
+        .law-item { padding: 12px; background: #282a2c; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; word-break: break-all; }
+        .law-item:hover, .law-item.active { background: #37393b; color: #a8c7fa; border: 1px solid #a8c7fa; }
+        #chat-container { flex: 1; display: flex; flex-direction: column; height: 100vh; background-color: #131314; }
+        #chat-header { padding: 20px; border-bottom: 1px solid #303132; font-size: 18px; color: #e3e3e3; }
+        #chat-window { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .message { max-width: 80%; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 15px; }
+        .user { background-color: #2b2a33; align-self: flex-end; color: #e3e3e3; }
+        .ai { background-color: transparent; align-self: flex-start; color: #e3e3e3; border-left: 3px solid #a8c7fa; padding-left: 15px; white-space: pre-wrap; }
+        .system { background-color: #1c1b22; color: #ffe082; align-self: center; text-align: center; font-size: 13px; max-width: 90%; border-radius: 8px; padding: 10px; }
+        #input-area { padding: 20px 40px 40px 40px; display: flex; gap: 10px; background-color: #131314; }
+        input { flex: 1; padding: 16px; border-radius: 30px; border: 1px solid #303132; background-color: #1e1f20; color: white; font-size: 16px; outline: none; }
+        input:focus { border-color: #a8c7fa; }
+        button { padding: 0 25px; border-radius: 30px; border: none; background-color: #a8c7fa; color: #041e49; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #c2e7ff; }
+        button:disabled { background-color: #3c4043; color: #80868b; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h3>⚖️ Bare Law Library</h3>
+        <div id="law-list">
+            <!-- Adjusted exactly to read the specific PDF names directly from your root directory folder -->
+            <div class="law-item" onclick="loadPdfFromUrl('sebi_lodr.pdf', this)">SEBI LODR Regulations</div>
+            <div class="law-item" onclick="loadPdfFromUrl('Forensic Audit_NCLT Order_2.pdf', this)">Forensic Audit NCLT Order</div>
+        </div>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-header">Select a document from the sidebar to begin consulting</div>
+        <div id="chat-window">
+            <div class="message ai">Welcome! Select a file on the left sidebar. CAs and CSs can run unlimited structural legal queries completely for free.</div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Ask a question about the active document..." disabled>
+            <button id="send-btn" onclick="sendMessage()" disabled>Ask AI</button>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cloudflare.com';
+        
+        let activeLawText = "";
+        
+        // This links back to your free backend serverless engine from Step 1
+        const WORKER_URL = "https://workers.dev";
+
+        async function loadPdfFromUrl(url, element) {
+            document.querySelectorAll('.law-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById("chat-header").innerText = `Scanning and Reading PDF data...`;
+            
+            appendMessage("system", `Loading document text directly into your secure browser tab memory...`);
+            
+            try {
+                const loadingTask = pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                let extractedText = "";
+                
+                // Read every page layout inside the user's browser tab
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    extractedText += pageText + "\n";
+                }
+                
+                activeLawText = extractedText;
+                document.getElementById("chat-header").innerText = `Consulting Active Document`;
+                appendMessage("ai", `Successfully loaded! Ask me any structural questions about rules, orders, or provisions within this text.`);
+                document.getElementById("user-input").disabled = false;
+                document.getElementById("send-btn").disabled = false;
+            } catch (e) {
+                console.error(e);
+                appendMessage("ai", "Error: Failed to process document layout. Make sure the file name matches exactly.");
+            }
+        }
+
+        function appendMessage(sender, text) {
+            const windowDiv = document.getElementById("chat-window");
+            const msg = document.createElement("div");
+            msg.className = `message ${sender}`;
+            msg.innerText = text;
+            windowDiv.appendChild(msg);
+            windowDiv.scrollTop = windowDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById("user-input");
+            const query = inputEl.value.trim();
+            if(!query) return;
+
+            appendMessage("user", query);
+            inputEl.value = "";
+            appendMessage("ai", "Consulting official cloud engine analytics...");
+            const lastAiMessageEl = document.getElementById("chat-window").lastChild;
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        lawText: activeLawText
+                    })
+                });
+
+                const data = await response.json();
+                lastAiMessageEl.innerText = data.answer || "Error processing answer from cloud backend.";
+            } catch (e) {
+                lastAiMessageEl.innerText = "Error: Network timeout or model limit hit. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>
